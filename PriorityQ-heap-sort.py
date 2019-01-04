@@ -76,14 +76,14 @@ class heapSort:
     def buildheap(self):
         for i in range(0,self.length//2):
             self.max_heapify(i)
-        print('After Heapiffy ->',self.lst)
+        print('After Heapify (max heap) ->',self.lst,'\n')
 
     
     
     def delete(self):
+        print('Before Deletion ->',self.lst)
         self.lst[0],self.lst[-1]=self.lst[-1],self.lst[0]
         self.lst.pop()
-        print('Before Deletion ->',self.lst)
         for i in range(0,len(self.lst)//2):
             self.max_heapify(i)
         print('After Deletion ->',self.lst,'\n')
