@@ -1,0 +1,267 @@
+import pickle,random,os
+
+class record:
+'''
+Objective: To represent a record entity
+'''
+    def __init__(self,key):
+        '''
+        objective: To initialse object of record class
+        input parameters:
+                        self:Implicit parameter
+                        key: The key of the value
+        '''
+        self.key=key+100000
+        self.nonkey=str(self.key)*10
+        
+    def getkey(self):
+        '''
+        objective: To get the key of a record
+        input parameters:
+                        self:Implicit parameter
+        returns the key of the record
+        '''
+        return self.key
+
+    def __str__(self):
+        '''
+        objective: To print the object of record class
+        input parameters:
+                        self:Implicit parameter
+        '''
+
+        return str(self.key)+" : "+str(self.nonkey)
+
+def merge(blocksize):
+    '''
+    objective: It is to merge the elements according to the blocksize
+               of elements in the files 2 and 3 and sort them and load
+               them in file 4 and 5.
+    input parameters:
+                    blocksize: It tells how many elements can be inside a block
+    '''
+    file1='file2.txt'
+    file2='file3.txt'
+    file3='file4.txt'
+    file4='file5.txt'
+
+    f1=open(file1,'rb')
+    f2=open(file2,'rb')
+    f3=open(file3,'wb')
+    f4=open(file4,'wb')
+
+    x=True
+    flag=True
+    
+    while x:
+        '''
+        this if is deciding whether to load the elements inide file 4 or file5
+        '''
+        if flag==True:
+            fileS=f3
+            flag=False
+
+        else:
+            fileS=f4
+            flag=True
+            
+        lst1=[]
+        lst2=[]
+        '''
+        this for loop is appending the elements in a block to a list
+        and if the end of file is reached it will set x=false so that while
+        loop can break
+        '''
+        for i in range(blocksize):
+            try:
+                lst1.append(pickle.load(f1))
+            except EOFError:
+                x=False
+
+        for i in range(blocksize):
+            try:
+                lst2.append(pickle.load(f2))
+            except EOFError:
+                x=False
+
+        i,j=0,0
+
+        '''
+        This is merging and sorting the elements in two list
+        '''
+        while i<len(lst1) and j<len(lst2):
+
+            if lst1[i].getkey()<lst2[j].getkey():
+                elt=lst1[i]
+                i=i+1
+
+            else:
+                elt=lst2[j]
+                j=j+1
+
+            pickle.dump(elt,fileS)
+
+        while i<len(lst1):
+            pickle.dump(lst1[i],fileS)
+            i=i+1
+
+        while j<len(lst2):
+            pickle.dump(lst2[j],fileS)
+            j=j+1
+
+    f1.close()
+    f2.close()
+    f3.close()
+    f4.close()
+
+    os.remove('file2.txt')
+    os.remove('file3.txt')
+    os.rename('file4.txt','file2.txt')
+    os.rename('file5.txt','file3.txt')
+
+def records_Up_Low(lower,upper):
+    '''
+    objective: To give the records according to the user limit
+    input parameters:
+                    lower:Lower limit of the record
+                    upper:upper limit of the record
+    '''
+    f2=open('file2.txt','rb')
+    obj=pickle.load(f2)
+    size=f2.tell()
+    f2.seek(0)
+    f2.seek(size*(lower-1))
+    for i in range(lower,upper+1):
+        print("RECORD NO- "+str(i),"->",pickle.load(f2),"\n")
+        
+            
+if __name__== '__main__':
+    
+    blocksize=int(input('ENTER INITIAL BLOCKSIZE : '))
+    n=int(input('ENTER NUMBER OF RECORDS TO BE STORED IN FILE : '))
+    keysList=[]
+    f=open('file1.txt','wb')
+
+
+    #HERE ENTERING THE RECORDS INTO FILE-1 AND ALSO THE RECORDS ARE NOT DUPLICATE, ONLY UNIQUE
+    for i in range(1,n+1):
+        key=random.randint(10,100000)
+        while key in keysList:
+            key=random.randint(10,100)
+        keysList.append(key)
+        pickle.dump(record(key),f)
+    f.close()
+
+
+
+    #PRINITNG THE RECORDS IN FILE-1
+##    print("\nRECORDS ENTERED INITIALLY IN A FILE ARE : ")
+##    f=open('file1.txt','rb')
+##    for i in range(1,n+1):
+##        print(pickle.load(f))
+##    f.close()
+
+    print('\n')
+
+
+    f=open('file1.txt','rb')
+    f1=open('file2.txt','wb')
+    f2=open('file3.txt','wb')
+
+    #BLOCKS WILL TELL THAT HOW MANY BLOCKS OF ELEMENT WITH BLOCKSIZE IS THERE.IF 12 RECORDS THEN THERE ARE 3 BLOCKS OF SIZE 4(4 ELEMENTS)
+    blocks=n//blocksize
+    left=n%blocksize
+    
+    '''
+    HERE WE ARE MAKING TWO FILES AND DISTRIBUTING 4 RECORDS IN FIRST FILE AND THEN
+    OTHER 4 IN OTHER FILE. IT WILL GO ALTERNATIVELY. INITIALLY THE BLOCKSIZE=4 THATS WHY 4
+    '''
+    k=0
+    for i in range(blocks):
+        lst=[]
+        for j in range(blocksize):
+            lst.append(pickle.load(f))
+        t=sorted(lst,key=lambda x:x.getkey())
+        k=i
+        
+        for elt in t:
+            if i%2==0:
+                pickle.dump(elt,f1)
+            else:
+                pickle.dump(elt,f2)
+
+    '''
+    IF THERE IS ODD NUMBER OF RECORDS THEN THERE WILL BE SOME RECORDS WHICH WILL BE LEFT
+    FOR EG- IF 13 RECORDS THEN ALTERNATIVELY 4 4 CAN BE ADDED, BUT ONE WILL BE LEFT. FOR THAT
+    THIS LOOP WORKS
+    '''
+    if left>0:
+        lst=[]
+
+        for i in range(left):
+            lst.append(pickle.load(f))
+        t=sorted(lst,key=lambda x:x.getkey())
+
+        for elt in t:
+            if (k+1)%2==0:
+                pickle.dump(elt,f1)
+            else:
+                pickle.dump(elt,f2)
+    f.close()
+    f1.close()
+    f2.close()
+
+
+    '''
+    HERE MERGING OF RECORDS IS BEING DONE,
+    MERGING WILL START WITH BLOCKSIZE AND THEN WILL BE INCREASES IN MULTIPLES OF 2
+    AND AT LAST WHEN FILE3 IS EMPTY WE WILL STOP AS ALL THE SORTED KEYS WILL BE IN
+    FILE-2
+    '''
+    while True:
+
+        merge(blocksize)
+        #WHEN FILE-3 BECOMES EMPTY
+        if os.path.getsize("file3.txt")==0:
+            break
+
+        blocksize=blocksize*2
+        
+
+
+
+    '''
+    AFTER MERGING AND SORTING RECORDS THE RECORDS IN THE FILE IS
+    PRINTED.
+    '''
+    print("AFTER MERGING AND SORTING, THE RESULTANT FILE RECORDS :- \n ")
+    f1=open('file2.txt','rb')
+    f2=open('file3.txt','rb')
+    lenf1=os.stat('file2.txt')
+    lenf2=os.stat('file3.txt')
+
+    #WHEN POINTER REACHES EOF
+    while f1.tell()!=lenf1.st_size:
+        print(pickle.load(f1))
+
+    print("\n")
+    
+    while f2.tell()!=lenf2.st_size:
+        print(pickle.load(f2))
+
+    f1.close()
+    f2.close()
+
+
+    '''
+    THIS IS IF A USER WANTS TO SEARCH THE RECORDS BETWEEN HIS ENETRED LIMITS
+    SO HE CAN ENTER UPPER AND LOWER LIMIT
+    '''
+    print("TO FIND THE RECORD ACCORDING TO YOUR WISH :- ")
+    lower=int(input("ENTER LOWER LIMIT : "))
+    upper=int(input("ENTER UPPER LIMIT : "))
+    if upper>lower:
+        records_Up_Low(lower,upper)
+    else:
+        print("YOU ENTERED THE LIMITS WRONG :(")
+
