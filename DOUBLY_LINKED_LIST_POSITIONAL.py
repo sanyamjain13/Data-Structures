@@ -122,6 +122,28 @@ class db_ll:
             else:
                 self.delete(temp)
 
+    def add_at_index(self,index,e):
+
+        size=self.size
+        temp=self.header
+        
+        if self.isEmpty():
+            print('LIST IS EMPTY, ADDING AT THE BEGINNING :)')
+            self.add_first(e)
+
+        elif index>self.size:
+            print('INDEX IS MORE THAN THE SIZE, ADDING AT THE END :)')
+            self.add_last(e)
+
+        else:
+            while(index!=0):
+                temp=temp.next
+                index-=1
+
+            pre=temp.prev
+            curr=temp
+            self.insert_between(e,pre,curr)
+
     def __str__(self):
 
         temp=self.header.next
@@ -152,7 +174,8 @@ def main():
     print('5.DELETE FIRST ELEMENT')
     print('6.DELETE LAST ELEMENT')
     print('7.DELETE A PARTICULAR ELEMENT')
-    print('8.PRINT LIST')
+    print('8.INSERT AT PARTICULAR INDEX')
+    print('9.PRINT LIST')
 
     print('-----------------------------------------------')
     
@@ -188,6 +211,11 @@ def main():
             d.delete_element(e)
 
         elif ch==8:
+            elt=int(input('ELEMENT TO ADD : '))
+            index=int(input('AT WHICH INDEX ? : '))
+            d.add_at_index(index,elt)
+        
+        elif ch==9:
             print(d)
 
         else:
